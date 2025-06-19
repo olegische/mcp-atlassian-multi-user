@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  mcp-atlassian:
+    image: ghcr.io/sooperset/mcp-atlassian:latest
+    container_name: mcp-atlassian
+    restart: unless-stopped
+    volumes:
+      - ${HOME}/.mcp-atlassian:/home/app/.mcp-atlassian
+    ports:
+      # Only needed if using HTTP transport (sse or streamable-http)
+      - "8603:8603"
+    environment:
+      # Transport configuration
+      - TRANSPORT=sse    # Using HTTP transport instead of stdio
+      - PORT=8603        # Match the exposed port
+      - HOST=0.0.0.0     # Allow external connections
+
+      # Common settings
+      - READ_ONLY_MODE=false
+      - MCP_VERBOSE=true
+      # - MCP_VERY_VERBOSE=true  # For debug level logging
+      # - ENABLED_TOOLS=confluence_search,jira_get_issue,jira_search  # Optional tool filtering
+
+      # =============================================
+      # AUTHENTICATION METHOD 1: API TOKEN (CLOUD)
+      # =============================================
+      # Jira configuration
+      - JIRA_URL=https://xrouter.atlassian.net
+      - JIRA_USERNAME=olromanchuk@gmail.com
+      - JIRA_API_TOKEN=ATATT3xFfGF006uU0CBG4s5quzOCITrQ6dZ5_OBJ27epy8V_pJ-WiCdC9KbG10tHK0VQaJqJr7aHVv5_M6PkagsOBFJVQtD9K6JDtefOjpe5k9F4piSVp0EtGH46PY9Qr_FGMT44w5RYydJW8qVf5_XZyfuvCkRGhWra3QLgh8l25C83MapxQtY=CF03BE52
+      
+      # Confluence configuration
+      - CONFLUENCE_URL=https://xrouter.atlassian.net/wiki
+      - CONFLUENCE_USERNAME=olromanchuk@gmail.com
+      - CONFLUENCE_API_TOKEN=ATATT3xFfGF006uU0CBG4s5quzOCITrQ6dZ5_OBJ27epy8V_pJ-WiCdC9KbG10tHK0VQaJqJr7aHVv5_M6PkagsOBFJVQtD9K6JDtefOjpe5k9F4piSVp0EtGH46PY9Qr_FGMT44w5RYydJW8qVf5_XZyfuvCkRGhWra3QLgh8l25C83MapxQtY=CF03BE52
+
+      # =============================================
+      # AUTHENTICATION METHOD 2: PERSONAL ACCESS TOKEN (SERVER/DC)
+      # =============================================
+      # Uncomment and replace the above Jira/Confluence config with these:
+      # - JIRA_URL=https://jira.your-internal-domain.com
+      # - JIRA_PERSONAL_TOKEN=your_jira_personal_access_token
+      # - JIRA_SSL_VERIFY=true  # Set to false if using self-signed certificates
+      
+      # - CONFLUENCE_URL=https://confluence.your-internal-domain.com
+      # - CONFLUENCE_PERSONAL_TOKEN=your_confluence_personal_access_token
+      # - CONFLUENCE_SSL_VERIFY=true  # Set to false if using self-signed certificates
+
+      # =============================================
+      # AUTHENTICATION METHOD 3: OAUTH 2.0 (CLOUD ONLY)
+      # =============================================
+      # Uncomment and replace the above Jira/Confluence config with these:
+      # - ATLASSIAN_OAUTH_CLIENT_ID=your_oauth_client_id
+      # - ATLASSIAN_OAUTH_CLIENT_SECRET=your_oauth_client_secret
+      # - ATLASSIAN_OAUTH_REDIRECT_URI=http://localhost:8080/callback
+      # - ATLASSIAN_OAUTH_SCOPE=read:jira-work write:jira-work read:confluence-space.summary read:confluence-content.all write:confluence-content offline_access
+      # - ATLASSIAN_OAUTH_CLOUD_ID=your_atlassian_cloud_id_from_oauth_setup
+      
+      # =============================================
+      # OPTIONAL FILTERING
+      # =============================================
+      # - CONFLUENCE_SPACES_FILTER=DEV,TEAM,DOC
+      # - JIRA_PROJECTS_FILTER=PROJ,DEV,SUPPORT
+
+      # =============================================
+      # PROXY CONFIGURATION (IF NEEDED)
+      # =============================================
+      # - HTTP_PROXY=http://proxy.example.com:8080
+      # - HTTPS_PROXY=https://proxy.example.com:8443
+      # - SOCKS_PROXY=socks5://proxy.example.com:1080
+      # - NO_PROXY=localhost,127.0.0.1,.internal.example.com
+
+  # =============================================
+  # OAUTH SETUP HELPER (OPTIONAL)
+  # =============================================
+  # Uncomment this service when you need to run the OAuth setup wizard
+  # oauth-setup:
+  #   image: ghcr.io/sooperset/mcp-atlassian:latest
+  #   container_name: mcp-atlassian-oauth-setup
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - ${HOME}/.mcp-atlassian:/home/app/.mcp-atlassian
+  #   environment:
+  #     - ATLASSIAN_OAUTH_CLIENT_ID=your_oauth_client_id
+  #     - ATLASSIAN_OAUTH_CLIENT_SECRET=your_oauth_client_secret
+  #     - ATLASSIAN_OAUTH_REDIRECT_URI=http://localhost:8080/callback
+  #     - ATLASSIAN_OAUTH_SCOPE=read:jira-work write:jira-work read:confluence-space.summary read:confluence-content.all write:confluence-content offline_access
+  #   command: --oauth-setup -v
+
+# =============================================
+# ALTERNATIVE: USING ENV FILE INSTEAD OF ENVIRONMENT VARIABLES
+# =============================================
+# If you prefer using an env file, comment out all the environment variables above
+# and uncomment this section:
+#
+# services:
+#   mcp-atlassian:
+#     image: ghcr.io/sooperset/mcp-atlassian:latest
+#     container_name: mcp-atlassian
+#     restart: unless-stopped
+#     volumes:
+#       - ${HOME}/.mcp-atlassian:/home/app/.mcp-atlassian
+#     ports:
+#       - "8000:8000"
+#     env_file:
+#       - .env
