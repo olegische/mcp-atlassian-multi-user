@@ -74,3 +74,10 @@ playground/
 
 # Claude
 .claude/
+
+# Project specific
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+secrets/

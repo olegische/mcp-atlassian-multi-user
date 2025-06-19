@@ -1,0 +1,12 @@
+services:
+  mcp-atlassian:
+    image: ${REGISTRY_ID}/${PROJECT_NAME}:latest
+    container_name: ${PROJECT_NAME}
+    platform: linux/amd64
+    ports:
+      - "${PORT:-8660}:${PORT:-8000}"
+    env_file:
+      - ./.env
+    restart: unless-stopped
+    volumes:
+      - ${HOME}/.${PROJECT_NAME}:/home/app/.${PROJECT_NAME}

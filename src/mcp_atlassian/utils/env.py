@@ -49,3 +49,14 @@ def is_env_ssl_verify(env_var_name: str, default: str = "true") -> bool:
         True unless explicitly set to false values
     """
     return os.getenv(env_var_name, default).lower() not in ("false", "0", "no")
+
+
+def is_custom_headers_enabled() -> bool:
+    """Check if custom headers for configuration are enabled.
+    
+    Checks if ENABLE_CUSTOM_HEADERS environment variable is set to a truthy value.
+    
+    Returns:
+        True if custom headers are enabled, False otherwise
+    """
+    return is_env_extended_truthy("ENABLE_CUSTOM_HEADERS", "false")

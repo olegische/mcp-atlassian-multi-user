@@ -10,12 +10,11 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from fastmcp import Context
-from fastmcp.server.dependencies import get_http_request
-from starlette.requests import Request
 
 from mcp_atlassian.confluence import ConfluenceConfig, ConfluenceFetcher
 from mcp_atlassian.jira import JiraConfig, JiraFetcher
 from mcp_atlassian.servers.context import MainAppContext
+from mcp_atlassian.utils.headers import extract_custom_headers_from_request, create_request_state_from_headers
 from mcp_atlassian.utils.oauth import OAuthConfig
 
 if TYPE_CHECKING:
@@ -144,7 +143,25 @@ async def get_jira_fetcher(ctx: Context) -> JiraFetcher:
         ValueError: If configuration or credentials are invalid.
     """
     logger.debug(f"get_jira_fetcher: ENTERED. Context ID: {id(ctx)}")
+    # Check for custom headers first (this works even if FastMCP bypasses middleware)
+    custom_headers = extract_custom_headers_from_request()
+    if custom_headers:
+        logger.info("get_jira_fetcher: Custom headers detected - creating config from headers")
+        try:
+            # Create mock request state from headers
+            mock_state = create_request_state_from_headers(custom_headers)
+            jira_config = JiraConfig.from_headers(mock_state)
+            logger.info(f"get_jira_fetcher: Successfully created Jira config from headers: URL={jira_config.url}, auth_type={jira_config.auth_type}")
+            return JiraFetcher(config=jira_config)
+        except Exception as e:
+            logger.error(f"get_jira_fetcher: Failed to create Jira config from custom headers: {e}")
+            raise ValueError(f"Custom headers mode is enabled but required JIRA headers are missing or invalid: {e}")
+    
+    # Standard HTTP request handling (user tokens, etc.)
     try:
+        from fastmcp.server.dependencies import get_http_request
+        from starlette.requests import Request
+        
         request: Request = get_http_request()
         logger.debug(
             f"get_jira_fetcher: In HTTP request context. Request URL: {request.url}. "
@@ -183,6 +200,7 @@ async def get_jira_fetcher(ctx: Context) -> JiraFetcher:
                 raise ValueError(
                     "Jira global configuration (URL, SSL) is not available from lifespan context."
                 )
+                
             logger.info(
                 f"Creating user-specific JiraFetcher (type: {user_auth_type}) for user {user_email or 'unknown'} (token ...{str(user_token)[-8:]})"
             )
@@ -213,6 +231,7 @@ async def get_jira_fetcher(ctx: Context) -> JiraFetcher:
         logger.debug(
             "Not in an HTTP request context. Attempting global JiraFetcher for non-HTTP."
         )
+    
     # Fallback to global fetcher if not in HTTP context or no user info
     lifespan_ctx_dict_global = ctx.request_context.lifespan_context  # type: ignore
     app_lifespan_ctx_global: MainAppContext | None = (
@@ -245,7 +264,25 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
         ValueError: If configuration or credentials are invalid.
     """
     logger.debug(f"get_confluence_fetcher: ENTERED. Context ID: {id(ctx)}")
+    # Check for custom headers first (this works even if FastMCP bypasses middleware)
+    custom_headers = extract_custom_headers_from_request()
+    if custom_headers:
+        logger.info("get_confluence_fetcher: Custom headers detected - creating config from headers")
+        try:
+            # Create mock request state from headers
+            mock_state = create_request_state_from_headers(custom_headers)
+            confluence_config = ConfluenceConfig.from_headers(mock_state)
+            logger.info(f"get_confluence_fetcher: Successfully created Confluence config from headers: URL={confluence_config.url}, auth_type={confluence_config.auth_type}")
+            return ConfluenceFetcher(config=confluence_config)
+        except Exception as e:
+            logger.error(f"get_confluence_fetcher: Failed to create Confluence config from custom headers: {e}")
+            raise ValueError(f"Custom headers mode is enabled but required CONFLUENCE headers are missing or invalid: {e}")
+    
+    # Standard HTTP request handling (user tokens, etc.)
     try:
+        from fastmcp.server.dependencies import get_http_request
+        from starlette.requests import Request
+        
         request: Request = get_http_request()
         logger.debug(
             f"get_confluence_fetcher: In HTTP request context. Request URL: {request.url}. "
@@ -285,6 +322,7 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
                 raise ValueError(
                     "Confluence global configuration (URL, SSL) is not available from lifespan context."
                 )
+                
             logger.info(
                 f"Creating user-specific ConfluenceFetcher (type: {user_auth_type}) for user {user_email or 'unknown'} (token ...{str(user_token)[-8:]})"
             )
@@ -333,6 +371,8 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
         logger.debug(
             "Not in an HTTP request context. Attempting global ConfluenceFetcher for non-HTTP."
         )
+    
+    # Fallback to global fetcher if not in HTTP context or no user info
     lifespan_ctx_dict_global = ctx.request_context.lifespan_context  # type: ignore
     app_lifespan_ctx_global: MainAppContext | None = (
         lifespan_ctx_dict_global.get("app_lifespan_context")

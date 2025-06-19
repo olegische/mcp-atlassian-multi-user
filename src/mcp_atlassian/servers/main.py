@@ -20,6 +20,7 @@ from mcp_atlassian.confluence.config import ConfluenceConfig
 from mcp_atlassian.jira import JiraFetcher
 from mcp_atlassian.jira.config import JiraConfig
 from mcp_atlassian.utils.environment import get_available_services
+from mcp_atlassian.utils.env import is_custom_headers_enabled
 from mcp_atlassian.utils.io import is_read_only_mode
 from mcp_atlassian.utils.logging import mask_sensitive
 from mcp_atlassian.utils.tools import get_enabled_tools, should_include_tool
@@ -41,39 +42,65 @@ async def main_lifespan(app: FastMCP[MainAppContext]) -> AsyncIterator[dict]:
     services = get_available_services()
     read_only = is_read_only_mode()
     enabled_tools = get_enabled_tools()
+    custom_headers_enabled = is_custom_headers_enabled()
 
     loaded_jira_config: JiraConfig | None = None
     loaded_confluence_config: ConfluenceConfig | None = None
 
-    if services.get("jira"):
-        try:
-            jira_config = JiraConfig.from_env()
-            if jira_config.is_auth_configured():
-                loaded_jira_config = jira_config
-                logger.info(
-                    "Jira configuration loaded and authentication is configured."
-                )
-            else:
-                logger.warning(
-                    "Jira URL found, but authentication is not fully configured. Jira tools will be unavailable."
-                )
-        except Exception as e:
-            logger.error(f"Failed to load Jira configuration: {e}", exc_info=True)
+    if custom_headers_enabled:
+        logger.info("Custom headers mode enabled - creating placeholder configurations")
+        # Create placeholder configurations for custom headers mode
+        # These will be replaced with actual values from headers at request time
+        if services.get("jira"):
+            loaded_jira_config = JiraConfig(
+                url="https://placeholder.atlassian.net",  # Will be overridden by headers
+                auth_type="basic",  # Will be determined from headers
+                username="placeholder",  # Will be overridden by headers
+                api_token="placeholder",  # Will be overridden by headers
+                ssl_verify=True,
+            )
+            logger.info("Jira placeholder configuration created for custom headers mode")
+        
+        if services.get("confluence"):
+            loaded_confluence_config = ConfluenceConfig(
+                url="https://placeholder.atlassian.net",  # Will be overridden by headers
+                auth_type="basic",  # Will be determined from headers
+                username="placeholder",  # Will be overridden by headers
+                api_token="placeholder",  # Will be overridden by headers
+                ssl_verify=True,
+            )
+            logger.info("Confluence placeholder configuration created for custom headers mode")
+    else:
+        # Standard environment variable mode
+        if services.get("jira"):
+            try:
+                jira_config = JiraConfig.from_env()
+                if jira_config.is_auth_configured():
+                    loaded_jira_config = jira_config
+                    logger.info(
+                        "Jira configuration loaded and authentication is configured."
+                    )
+                else:
+                    logger.warning(
+                        "Jira URL found, but authentication is not fully configured. Jira tools will be unavailable."
+                    )
+            except Exception as e:
+                logger.error(f"Failed to load Jira configuration: {e}", exc_info=True)
 
-    if services.get("confluence"):
-        try:
-            confluence_config = ConfluenceConfig.from_env()
-            if confluence_config.is_auth_configured():
-                loaded_confluence_config = confluence_config
-                logger.info(
-                    "Confluence configuration loaded and authentication is configured."
-                )
-            else:
-                logger.warning(
-                    "Confluence URL found, but authentication is not fully configured. Confluence tools will be unavailable."
-                )
-        except Exception as e:
-            logger.error(f"Failed to load Confluence configuration: {e}", exc_info=True)
+        if services.get("confluence"):
+            try:
+                confluence_config = ConfluenceConfig.from_env()
+                if confluence_config.is_auth_configured():
+                    loaded_confluence_config = confluence_config
+                    logger.info(
+                        "Confluence configuration loaded and authentication is configured."
+                    )
+                else:
+                    logger.warning(
+                        "Confluence URL found, but authentication is not fully configured. Confluence tools will be unavailable."
+                    )
+            except Exception as e:
+                logger.error(f"Failed to load Confluence configuration: {e}", exc_info=True)
 
     app_context = MainAppContext(
         full_jira_config=loaded_jira_config,

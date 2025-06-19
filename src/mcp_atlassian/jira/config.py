@@ -124,6 +124,84 @@ class JiraConfig:
             socks_proxy=socks_proxy,
         )
 
+    @classmethod
+    def from_headers(cls, request_state) -> "JiraConfig":
+        """Create configuration from HTTP headers stored in request state.
+
+        Args:
+            request_state: Request state object containing header values
+
+        Returns:
+            JiraConfig with values from HTTP headers
+
+        Raises:
+            ValueError: If required headers are missing or invalid
+        """
+        logger = logging.getLogger("mcp-atlassian.jira.config")
+        
+        url = getattr(request_state, 'jira_url', None)
+        if not url:
+            error_msg = "Missing required X-JIRA-URL header"
+            raise ValueError(error_msg)
+
+        # Get authentication credentials from headers
+        username = getattr(request_state, 'jira_username', None)
+        api_token = getattr(request_state, 'jira_api_token', None)
+        personal_token = getattr(request_state, 'jira_personal_token', None)
+        
+        logger.info(f"=== JIRA CONFIG FROM HEADERS ===")
+        logger.info(f"  URL: {url}")
+        logger.info(f"  Username: {username}")
+        logger.info(f"  API Token: {'***masked***' if api_token else None}")
+        logger.info(f"  Personal Token: {'***masked***' if personal_token else None}")
+        
+        # Use tokens as-is without URL decoding
+
+        # Determine authentication type
+        is_cloud = is_atlassian_cloud_url(url)
+        auth_type = None
+
+        if is_cloud:
+            if username and api_token:
+                auth_type = "basic"
+            else:
+                error_msg = "Cloud authentication requires X-JIRA-USERNAME and X-JIRA-API-TOKEN headers"
+                raise ValueError(error_msg)
+        else:  # Server/Data Center
+            if personal_token:
+                auth_type = "pat"
+            elif username and api_token:
+                auth_type = "basic"
+            else:
+                error_msg = "Server/Data Center authentication requires X-JIRA-PERSONAL-TOKEN or X-JIRA-USERNAME and X-JIRA-API-TOKEN headers"
+                raise ValueError(error_msg)
+
+        # SSL verification
+        ssl_verify_str = getattr(request_state, 'jira_ssl_verify', 'true')
+        ssl_verify = ssl_verify_str.lower() not in ("false", "0", "no")
+
+        # Get optional settings
+        projects_filter = getattr(request_state, 'jira_projects_filter', None)
+        http_proxy = getattr(request_state, 'jira_http_proxy', None)
+        https_proxy = getattr(request_state, 'jira_https_proxy', None)
+        no_proxy = getattr(request_state, 'jira_no_proxy', None)
+        socks_proxy = getattr(request_state, 'jira_socks_proxy', None)
+
+        return cls(
+            url=url,
+            auth_type=auth_type,
+            username=username,
+            api_token=api_token,
+            personal_token=personal_token,
+            oauth_config=None,  # OAuth not supported via headers
+            ssl_verify=ssl_verify,
+            projects_filter=projects_filter,
+            http_proxy=http_proxy,
+            https_proxy=https_proxy,
+            no_proxy=no_proxy,
+            socks_proxy=socks_proxy,
+        )
+
     def is_auth_configured(self) -> bool:
         """Check if the current authentication configuration is complete and valid for making API calls.
 

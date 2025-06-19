@@ -1,0 +1,11 @@
+services:
+  mcp-atlassian:
+    image: ${REGISTRY_ID}/${PROJECT_NAME}:${VERSION}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+      tags:
+        - ${REGISTRY_ID}/${PROJECT_NAME}:${VERSION}
+        - ${REGISTRY_ID}/${PROJECT_NAME}:latest

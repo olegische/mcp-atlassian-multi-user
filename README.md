@@ -421,6 +421,15 @@ Both transport types support single-user and multi-user authentication:
   - Cloud: OAuth 2.0 Bearer tokens
   - Server/Data Center: Personal Access Tokens (PATs)
 
+**Custom Headers Support:**
+- You can pass configuration parameters via custom headers when using HTTP transport
+- Enable with `ENABLE_CUSTOM_HEADERS=true` environment variable
+- Headers follow the pattern `X-JIRA-*` and `X-CONFLUENCE-*`, for example:
+  - `X-JIRA-URL`: Override Jira URL
+  - `X-JIRA-PERSONAL-TOKEN`: Pass Jira Personal Access Token
+  - `X-CONFLUENCE-URL`: Override Confluence URL
+  - `X-CONFLUENCE-PERSONAL-TOKEN`: Pass Confluence Personal Access Token
+
 <details> <summary>Basic HTTP Transport Setup</summary>
 
 1. Start the server with your chosen transport:
