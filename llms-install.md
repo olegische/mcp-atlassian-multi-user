@@ -4,47 +4,14 @@ This guide will help you install and configure the MCP Atlassian server for mana
 
 ## Requirements
 
-- Docker installed on your system (for options 2-4)
-- Python 3.8+ and uv installed (for option 1)
+- Docker installed on your system
 - Access to Atlassian Cloud or Server/Data Center instance
 - Valid Atlassian credentials (API tokens or Personal Access Tokens)
 - Web browser for OAuth authentication (if using OAuth)
 
 ## Installation Methods - Choose One
 
-### Method 1: Local Installation with uvx (Simplest)
-
-**Best for**: Single user, quick testing, development
-
-**Step 1**: Install and run directly
-```bash
-# Install and run with uvx
-uvx mcp-atlassian --transport stdio
-```
-
-**Step 2**: Configure Claude Desktop
-```json
-{
-  "mcpServers": {
-    "mcp-atlassian": {
-      "command": "uvx",
-      "args": ["mcp-atlassian"],
-      "env": {
-        "CONFLUENCE_URL": "https://your-company.atlassian.net/wiki",
-        "CONFLUENCE_USERNAME": "your.email@company.com",
-        "CONFLUENCE_API_TOKEN": "your_confluence_api_token",
-        "JIRA_URL": "https://your-company.atlassian.net",
-        "JIRA_USERNAME": "your.email@company.com",
-        "JIRA_API_TOKEN": "your_jira_api_token"
-      }
-    }
-  }
-}
-```
-
----
-
-### Method 2: Docker with Environment Variables (Single User)
+### Method 1: Docker with Environment Variables (Single User)
 
 **Best for**: Single user, production deployment, isolated environment
 
