@@ -245,36 +245,14 @@ Before using any method, set up your Atlassian credentials:
 
 ### Environment Variables
 
-Common configuration options:
-
 - `CONFLUENCE_SPACES_FILTER`: Filter by space keys (e.g., "DEV,TEAM,DOC")
 - `JIRA_PROJECTS_FILTER`: Filter by project keys (e.g., "PROJ,DEV,SUPPORT")
 - `READ_ONLY_MODE`: Set to "true" to disable write operations
 - `MCP_VERBOSE`: Set to "true" for more detailed logging
 - `ENABLED_TOOLS`: Comma-separated list of tool names to enable
-
-### SSL Configuration
-
-For Server/Data Center with self-signed certificates:
-
-```json
-"env": {
-  "CONFLUENCE_SSL_VERIFY": "false",
-  "JIRA_SSL_VERIFY": "false"
-}
-```
-
-### Proxy Configuration
-
-For environments requiring proxy access:
-
-```json
-"env": {
-  "HTTP_PROXY": "http://proxy.internal:8080",
-  "HTTPS_PROXY": "http://proxy.internal:8080",
-  "NO_PROXY": "localhost,.your-company.com"
-}
-```
+- `CONFLUENCE_SSL_VERIFY`: Set to "false" for self-signed certificates
+- `JIRA_SSL_VERIFY`: Set to "false" for self-signed certificates
+- `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`: Proxy configuration
 
 ## Troubleshooting
 
@@ -360,48 +338,11 @@ After installation, you can perform various operations:
 "Find related documentation for this Jira issue"
 ```
 
-## Advanced Deployment
-
-### HTTP Transport Mode
-
-For persistent service deployment:
-
-```bash
-# Start as HTTP service
-docker run --rm -p 8000:8000 \
-  --env-file /path/to/your/.env \
-  olegische/mcp-atlassian:latest \
-  --transport sse --port 8000 -vv
-```
-
-Then configure IDE with:
-
-```json
-{
-  "mcpServers": {
-    "mcp-atlassian-http": {
-      "url": "http://localhost:8000/sse"
-    }
-  }
-}
-```
-
-### Multi-User Setup
-
-For enterprise environments with multiple users, use custom headers mode:
-
-```bash
-docker run --rm -p 8000:8000 \
-  -e ENABLE_CUSTOM_HEADERS=true \
-  olegische/mcp-atlassian:latest \
-  --transport sse --port 8000 -vv
-```
-
 ## Support
 
 For more detailed information and troubleshooting:
 
-- Check the [GitHub repository](https://github.com/sooperset/mcp-atlassian)
-- Review the [full README](https://github.com/sooperset/mcp-atlassian/blob/main/README.md)
+- Check the [GitHub repository](https://github.com/olegische/mcp-atlassian-mcpo-ready)
+- Review the [full README](https://github.com/olegische/mcp-atlassian-mcpo-ready/blob/dev/README.md)
 - File issues for bugs or feature requests
-- Check [SECURITY.md](https://github.com/sooperset/mcp-atlassian/blob/main/SECURITY.md) for security best practices
+- Check [SECURITY.md](https://github.com/olegische/mcp-atlassian-mcpo-ready/blob/dev/SECURITY.md) for security best practices
