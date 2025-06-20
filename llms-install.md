@@ -136,9 +136,11 @@ docker run --rm -p 8000:8000 \
 
 ---
 
-### Method 4: MCPO Proxy with Custom Headers (Enterprise) 🏢
+### Method 4: MCPO Proxy for OpenWebUI Integration 🌐
 
-**Best for**: Enterprise environments, proxy scenarios, advanced multi-user setups
+**Best for**: OpenWebUI integration, REST API access, web-based AI interfaces
+
+MCPO (MCP-to-OpenAPI proxy) converts MCP servers into standard REST APIs, making them compatible with OpenWebUI and other web-based AI platforms.
 
 **Step 1**: Start MCP server with custom headers
 ```bash
@@ -165,7 +167,7 @@ export HTTP_HEADER_CONFLUENCE_URL="https://confluence.your-company.com"
 export HTTP_HEADER_CONFLUENCE_PERSONAL_TOKEN="your_confluence_personal_token"
 ```
 
-**Step 3**: Run MCPO proxy
+**Step 3**: Run MCPO proxy to convert MCP to REST API
 ```bash
 # For Cloud (with username/API token)
 uvx mcpo --port 8600 --server-type "sse" \
@@ -190,16 +192,17 @@ uvx mcpo --port 8600 --server-type "sse" \
     -- http://localhost:8000/sse
 ```
 
-**Step 4**: Configure Claude Desktop
-```json
-{
-  "mcpServers": {
-    "mcp-atlassian": {
-      "url": "http://localhost:8600/sse"
-    }
-  }
-}
-```
+**Step 4**: Access REST API and OpenAPI documentation
+- **REST API**: Available at `http://localhost:8600`
+- **Interactive docs**: Visit `http://localhost:8600/docs` for Swagger UI
+- **OpenWebUI**: Configure as external API endpoint in OpenWebUI settings
+
+**Benefits of MCPO approach:**
+- ✅ Converts MCP tools to standard REST APIs
+- ✅ Auto-generates OpenAPI documentation
+- ✅ Compatible with OpenWebUI and other web platforms
+- ✅ Secure HTTP endpoints with authentication
+- ✅ No need for custom MCP protocol handling
 
 ---
 
