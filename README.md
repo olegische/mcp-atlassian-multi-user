@@ -68,7 +68,7 @@ MCP Atlassian supports three authentication methods:
    docker run --rm -i \
      -p 8080:8080 \
      -v "${HOME}/.mcp-atlassian:/home/app/.mcp-atlassian" \
-     ghcr.io/sooperset/mcp-atlassian:latest --oauth-setup -v
+     olegische/mcp-atlassian:latest --oauth-setup -v
    ```
 6. Follow prompts for `Client ID`, `Secret`, `URI`, and `Scope`
 7. Complete browser authorization
@@ -82,14 +82,127 @@ MCP Atlassian supports three authentication methods:
 > [!IMPORTANT]
 > Include `offline_access` in scope for persistent auth (e.g., `read:jira-work write:jira-work offline_access`)
 
-### 📦 2. Installation
+### 🚀 2. Installation & Deployment
 
-MCP Atlassian is distributed as a Docker image. This is the recommended way to run the server, especially for IDE integration. Ensure you have Docker installed.
+MCP Atlassian can be deployed in several ways depending on your infrastructure and requirements:
+
+#### A. Direct Installation with uvx
+
+The simplest way to run MCP Atlassian directly:
 
 ```bash
-# Pull Pre-built Image
-docker pull ghcr.io/sooperset/mcp-atlassian:latest
+# Install and run with uvx
+uvx mcp-atlassian --transport sse --port 8000 -vv
 ```
+
+Environment variables should be configured in your shell or `.env` file before running.
+
+#### B. Docker Deployment
+
+##### Option 1: Environment Variables Configuration
+
+Run the container with credentials passed as environment variables:
+
+```bash
+# Pull the image
+docker pull olegische/mcp-atlassian:latest
+
+# Run with environment variables
+docker run --rm -p 8000:8000 \
+  -e JIRA_URL="https://your-company.atlassian.net" \
+  -e JIRA_USERNAME="your.email@company.com" \
+  -e JIRA_API_TOKEN="your_jira_api_token" \
+  -e CONFLUENCE_URL="https://your-company.atlassian.net/wiki" \
+  -e CONFLUENCE_USERNAME="your.email@company.com" \
+  -e CONFLUENCE_API_TOKEN="your_confluence_api_token" \
+  olegische/mcp-atlassian:latest \
+  --transport sse --port 8000 -vv
+```
+
+##### Option 2: Custom Headers Configuration
+
+For cloud deployments where you don't want to embed credentials in the container, enable custom headers mode:
+
+```bash
+# Run with custom headers enabled
+docker run --rm -p 8000:8000 \
+  -e ENABLE_CUSTOM_HEADERS=true \
+  olegische/mcp-atlassian:latest \
+  --transport sse --port 8000 -vv
+```
+
+Then pass credentials via HTTP headers when making requests:
+- `X-JIRA-URL`: Your Jira instance URL
+- `X-JIRA-USERNAME`: Your Jira username
+- `X-JIRA-API-TOKEN`: Your Jira API token
+- `X-CONFLUENCE-URL`: Your Confluence instance URL
+- `X-CONFLUENCE-USERNAME`: Your Confluence username
+- `X-CONFLUENCE-API-TOKEN`: Your Confluence API token
+
+#### C. MCPO Proxy Deployment
+
+Use MCPO (MCP Proxy) to run the server with custom headers. This approach is particularly useful for Server/Data Center deployments where you want to avoid embedding credentials in containers.
+
+**Step 1: Start the MCP server container with custom headers enabled**
+
+```bash
+# Start the container with custom headers support
+docker run --rm -p 8000:8000 \
+  -e ENABLE_CUSTOM_HEADERS=true \
+  olegische/mcp-atlassian:latest \
+  --transport sse --port 8000 -vv
+```
+
+**Step 2: Set up environment variables for MCPO headers**
+
+```bash
+# For Cloud deployments
+export HTTP_HEADER_JIRA_URL="https://your-company.atlassian.net"
+export HTTP_HEADER_JIRA_USERNAME="your.email@company.com"
+export HTTP_HEADER_JIRA_API_TOKEN="your_jira_api_token"
+export HTTP_HEADER_CONFLUENCE_URL="https://your-company.atlassian.net/wiki"
+export HTTP_HEADER_CONFLUENCE_USERNAME="your.email@company.com"
+export HTTP_HEADER_CONFLUENCE_API_TOKEN="your_confluence_api_token"
+
+# For Server/Data Center deployments
+export HTTP_HEADER_JIRA_URL="https://jira.your-company.com"
+export HTTP_HEADER_JIRA_PERSONAL_TOKEN="your_jira_personal_token"
+export HTTP_HEADER_CONFLUENCE_URL="https://confluence.your-company.com"
+export HTTP_HEADER_CONFLUENCE_PERSONAL_TOKEN="your_confluence_personal_token"
+```
+
+**Step 3: Run MCPO proxy**
+
+```bash
+# For Cloud (with username/API token)
+uvx mcpo --port 8600 --server-type "sse" \
+    --header "{
+        \"X-JIRA-URL\": \"${HTTP_HEADER_JIRA_URL}\",
+        \"X-JIRA-USERNAME\": \"${HTTP_HEADER_JIRA_USERNAME}\",
+        \"X-JIRA-API-TOKEN\": \"${HTTP_HEADER_JIRA_API_TOKEN}\",
+        \"X-CONFLUENCE-URL\": \"${HTTP_HEADER_CONFLUENCE_URL}\",
+        \"X-CONFLUENCE-USERNAME\": \"${HTTP_HEADER_CONFLUENCE_USERNAME}\",
+        \"X-CONFLUENCE-API-TOKEN\": \"${HTTP_HEADER_CONFLUENCE_API_TOKEN}\"
+    }" \
+    -- http://localhost:8000/sse
+
+# For Server/Data Center (with Personal Access Tokens)
+uvx mcpo --port 8600 --server-type "sse" \
+    --header "{
+        \"X-JIRA-URL\": \"${HTTP_HEADER_JIRA_URL}\",
+        \"X-JIRA-PERSONAL-TOKEN\": \"${HTTP_HEADER_JIRA_PERSONAL_TOKEN}\",
+        \"X-CONFLUENCE-URL\": \"${HTTP_HEADER_CONFLUENCE_URL}\",
+        \"X-CONFLUENCE-PERSONAL-TOKEN\": \"${HTTP_HEADER_CONFLUENCE_PERSONAL_TOKEN}\"
+    }" \
+    -- http://localhost:8000/sse
+```
+
+> [!NOTE]
+> MCPO deployment is particularly useful for:
+> - **Server/Data Center environments** where you want to avoid embedding user credentials in containers
+> - **Multi-user scenarios** where different users have different credentials
+> - **Corporate environments** where credentials need to be passed dynamically
+> - **Proxy/middleware scenarios** where additional request processing is needed
 
 ## 🛠️ IDE Integration
 
@@ -122,7 +235,6 @@ There are two main approaches to configure the Docker container:
 >
 > See the [.env.example](https://github.com/sooperset/mcp-atlassian/blob/main/.env.example) file for all available options.
 
-
 ### 📝 Configuration Examples
 
 **Method 1 (Passing Variables Directly):**
@@ -141,7 +253,7 @@ There are two main approaches to configure the Docker container:
         "-e", "JIRA_URL",
         "-e", "JIRA_USERNAME",
         "-e", "JIRA_API_TOKEN",
-        "ghcr.io/sooperset/mcp-atlassian:latest"
+        "olegische/mcp-atlassian:latest"
       ],
       "env": {
         "CONFLUENCE_URL": "https://your-company.atlassian.net/wiki",
@@ -170,7 +282,7 @@ There are two main approaches to configure the Docker container:
         "-i",
         "--env-file",
         "/path/to/your/mcp-atlassian.env",
-        "ghcr.io/sooperset/mcp-atlassian:latest"
+        "olegische/mcp-atlassian:latest"
       ]
     }
   }
@@ -198,7 +310,7 @@ For Server/Data Center deployments, use direct variable passing:
         "-e", "JIRA_URL",
         "-e", "JIRA_PERSONAL_TOKEN",
         "-e", "JIRA_SSL_VERIFY",
-        "ghcr.io/sooperset/mcp-atlassian:latest"
+        "olegische/mcp-atlassian:latest"
       ],
       "env": {
         "CONFLUENCE_URL": "https://confluence.your-company.com",
@@ -241,7 +353,7 @@ This example shows how to configure `mcp-atlassian` in your IDE (like Cursor or 
         "-e", "ATLASSIAN_OAUTH_REDIRECT_URI",
         "-e", "ATLASSIAN_OAUTH_SCOPE",
         "-e", "ATLASSIAN_OAUTH_CLOUD_ID",
-        "ghcr.io/sooperset/mcp-atlassian:latest",
+        "olegische/mcp-atlassian:latest",
       ],
       "env": {
         "JIRA_URL": "https://your-company.atlassian.net",
@@ -288,7 +400,7 @@ Add the relevant proxy variables to the `args` (using `-e`) and `env` sections o
         "-e", "HTTP_PROXY",
         "-e", "HTTPS_PROXY",
         "-e", "NO_PROXY",
-        "ghcr.io/sooperset/mcp-atlassian:latest"
+        "olegische/mcp-atlassian:latest"
       ],
       "env": {
         "... existing Confluence/Jira vars": "...",
@@ -321,7 +433,7 @@ Credentials in proxy URLs are masked in logs. If you set `NO_PROXY`, it will be 
         "-e", "CONFLUENCE_URL",
         "-e", "CONFLUENCE_USERNAME",
         "-e", "CONFLUENCE_API_TOKEN",
-        "ghcr.io/sooperset/mcp-atlassian:latest"
+        "olegische/mcp-atlassian:latest"
       ],
       "env": {
         "CONFLUENCE_URL": "https://your-company.atlassian.net/wiki",
@@ -345,7 +457,7 @@ For Confluence Server/DC, use:
         "-i",
         "-e", "CONFLUENCE_URL",
         "-e", "CONFLUENCE_PERSONAL_TOKEN",
-        "ghcr.io/sooperset/mcp-atlassian:latest"
+        "olegische/mcp-atlassian:latest"
       ],
       "env": {
         "CONFLUENCE_URL": "https://confluence.your-company.com",
@@ -370,7 +482,7 @@ For Confluence Server/DC, use:
         "-e", "JIRA_URL",
         "-e", "JIRA_USERNAME",
         "-e", "JIRA_API_TOKEN",
-        "ghcr.io/sooperset/mcp-atlassian:latest"
+        "olegische/mcp-atlassian:latest"
       ],
       "env": {
         "JIRA_URL": "https://your-company.atlassian.net",
@@ -394,7 +506,7 @@ For Jira Server/DC, use:
         "-i",
         "-e", "JIRA_URL",
         "-e", "JIRA_PERSONAL_TOKEN",
-        "ghcr.io/sooperset/mcp-atlassian:latest"
+        "olegische/mcp-atlassian:latest"
       ],
       "env": {
         "JIRA_URL": "https://jira.your-company.com",
@@ -438,13 +550,13 @@ Both transport types support single-user and multi-user authentication:
     # For SSE transport
     docker run --rm -p 9000:9000 \
       --env-file /path/to/your/.env \
-      ghcr.io/sooperset/mcp-atlassian:latest \
+      olegische/mcp-atlassian:latest \
       --transport sse --port 9000 -vv
 
     # OR for streamable-http transport
     docker run --rm -p 9000:9000 \
       --env-file /path/to/your/.env \
-      ghcr.io/sooperset/mcp-atlassian:latest \
+      olegische/mcp-atlassian:latest \
       --transport streamable-http --port 9000 -vv
     ```
 
@@ -482,14 +594,14 @@ Here's a complete example of setting up multi-user authentication with streamabl
    docker run --rm -i \
      -p 8080:8080 \
      -v "${HOME}/.mcp-atlassian:/home/app/.mcp-atlassian" \
-     ghcr.io/sooperset/mcp-atlassian:latest --oauth-setup -v
+     olegische/mcp-atlassian:latest --oauth-setup -v
    ```
 
 2. Start the server with streamable-HTTP transport:
    ```bash
    docker run --rm -p 9000:9000 \
      --env-file /path/to/your/.env \
-     ghcr.io/sooperset/mcp-atlassian:latest \
+     olegische/mcp-atlassian:latest \
      --transport streamable-http --port 9000 -vv
    ```
 
@@ -606,8 +718,6 @@ Here's a complete example of setting up multi-user authentication with streamabl
 </details>
 
 *Tool only available on Jira Cloud
-
-</details>
 
 ### Tool Filtering and Access Control
 
