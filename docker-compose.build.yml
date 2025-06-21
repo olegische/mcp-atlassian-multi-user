@@ -1,5 +1,5 @@
 services:
-  mcp-atlassian:
+  mcp-atlassian-multi-user:
     image: ${REGISTRY_ID}/${PROJECT_NAME}:${VERSION}
     build:
       context: .

@@ -1,5 +1,5 @@
 services:
-  mcp-atlassian:
+  mcp-atlassian-multi-user:
     image: ${REGISTRY_ID}/${PROJECT_NAME}:latest
     container_name: ${PROJECT_NAME}
     platform: linux/amd64
