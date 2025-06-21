@@ -17,7 +17,7 @@ This guide will help you install and configure the MCP Atlassian server for mana
 
 **Step 1**: Pull Docker image
 ```bash
-docker pull olegische/mcp-atlassian:latest
+docker pull olegische/mcp-atlassian-multi-user:latest
 ```
 
 **Step 2**: Configure Claude Desktop
@@ -36,7 +36,7 @@ docker pull olegische/mcp-atlassian:latest
         "-e", "JIRA_URL",
         "-e", "JIRA_USERNAME",
         "-e", "JIRA_API_TOKEN",
-        "olegische/mcp-atlassian:latest"
+        "olegische/mcp-atlassian-multi-user:latest"
       ],
       "env": {
         "CONFLUENCE_URL": "https://your-company.atlassian.net/wiki",
@@ -61,7 +61,7 @@ docker pull olegische/mcp-atlassian:latest
 ```bash
 docker run --rm -p 8000:8000 \
   -e ENABLE_CUSTOM_HEADERS=true \
-  olegische/mcp-atlassian:latest \
+  olegische/mcp-atlassian-multi-user:latest \
   --transport sse --port 8000 -vv
 ```
 
@@ -113,7 +113,7 @@ MCPO (MCP-to-OpenAPI proxy) converts MCP servers into standard REST APIs, making
 ```bash
 docker run --rm -p 8000:8000 \
   -e ENABLE_CUSTOM_HEADERS=true \
-  olegische/mcp-atlassian:latest \
+  olegische/mcp-atlassian-multi-user:latest \
   --transport sse --port 8000 -vv
 ```
 
@@ -200,7 +200,7 @@ Before using any method, set up your Atlassian credentials:
    docker run --rm -i \
      -p 8080:8080 \
      -v "${HOME}/.mcp-atlassian:/home/app/.mcp-atlassian" \
-     olegische/mcp-atlassian:latest --oauth-setup -v
+     olegische/mcp-atlassian-multi-user:latest --oauth-setup -v
    ```
 6. Follow prompts and complete browser authorization
 
@@ -257,7 +257,7 @@ If you encounter issues during installation:
 
 ```bash
 # Test Docker image
-docker run --rm olegische/mcp-atlassian:latest --help
+docker run --rm olegische/mcp-atlassian-multi-user:latest --help
 
 # Check logs (macOS)
 tail -n 20 -f ~/Library/Logs/Claude/mcp*.log
@@ -266,7 +266,7 @@ tail -n 20 -f ~/Library/Logs/Claude/mcp*.log
 type %APPDATA%\Claude\logs\mcp*.log | more
 
 # Test with MCP Inspector
-npx @modelcontextprotocol/inspector docker run --rm -i olegische/mcp-atlassian:latest
+npx @modelcontextprotocol/inspector docker run --rm -i olegische/mcp-atlassian-multi-user:latest
 ```
 
 ## Security Notes
@@ -312,7 +312,7 @@ After installation, you can perform various operations:
 
 For more detailed information and troubleshooting:
 
-- Check the [GitHub repository](https://github.com/olegische/mcp-atlassian-mcpo-ready)
-- Review the [full README](https://github.com/olegische/mcp-atlassian-mcpo-ready/blob/dev/README.md)
+- Check the [GitHub repository](https://github.com/olegische/mcp-atlassian-multi-user)
+- Review the [full README](https://github.com/olegische/mcp-atlassian-multi-user/blob/dev/README.md)
 - File issues for bugs or feature requests
-- Check [SECURITY.md](https://github.com/olegische/mcp-atlassian-mcpo-ready/blob/dev/SECURITY.md) for security best practices
+- Check [SECURITY.md](https://github.com/olegische/mcp-atlassian-multi-user/blob/dev/SECURITY.md) for security best practices

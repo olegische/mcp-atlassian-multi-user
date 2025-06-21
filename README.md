@@ -68,7 +68,7 @@ MCP Atlassian supports three authentication methods:
    docker run --rm -i \
      -p 8080:8080 \
      -v "${HOME}/.mcp-atlassian:/home/app/.mcp-atlassian" \
-     olegische/mcp-atlassian:latest --oauth-setup -v
+     olegische/mcp-atlassian-multi-user:latest --oauth-setup -v
    ```
 6. Follow prompts for `Client ID`, `Secret`, `URI`, and `Scope`
 7. Complete browser authorization
@@ -105,7 +105,7 @@ Run the container with credentials passed as environment variables:
 
 ```bash
 # Pull the image
-docker pull olegische/mcp-atlassian:latest
+docker pull olegische/mcp-atlassian-multi-user:latest
 
 # Run with environment variables
 docker run --rm -p 8000:8000 \
@@ -115,7 +115,7 @@ docker run --rm -p 8000:8000 \
   -e CONFLUENCE_URL="https://your-company.atlassian.net/wiki" \
   -e CONFLUENCE_USERNAME="your.email@company.com" \
   -e CONFLUENCE_API_TOKEN="your_confluence_api_token" \
-  olegische/mcp-atlassian:latest \
+  olegische/mcp-atlassian-multi-user:latest \
   --transport sse --port 8000 -vv
 ```
 
@@ -127,7 +127,7 @@ For cloud deployments where you don't want to embed credentials in the container
 # Run with custom headers enabled
 docker run --rm -p 8000:8000 \
   -e ENABLE_CUSTOM_HEADERS=true \
-  olegische/mcp-atlassian:latest \
+  olegische/mcp-atlassian-multi-user:latest \
   --transport sse --port 8000 -vv
 ```
 
@@ -149,7 +149,7 @@ Use MCPO (MCP Proxy) to run the server with custom headers. This approach is par
 # Start the container with custom headers support
 docker run --rm -p 8000:8000 \
   -e ENABLE_CUSTOM_HEADERS=true \
-  olegische/mcp-atlassian:latest \
+  olegische/mcp-atlassian-multi-user:latest \
   --transport sse --port 8000 -vv
 ```
 
@@ -253,7 +253,7 @@ There are two main approaches to configure the Docker container:
         "-e", "JIRA_URL",
         "-e", "JIRA_USERNAME",
         "-e", "JIRA_API_TOKEN",
-        "olegische/mcp-atlassian:latest"
+        "olegische/mcp-atlassian-multi-user:latest"
       ],
       "env": {
         "CONFLUENCE_URL": "https://your-company.atlassian.net/wiki",
@@ -282,7 +282,7 @@ There are two main approaches to configure the Docker container:
         "-i",
         "--env-file",
         "/path/to/your/mcp-atlassian.env",
-        "olegische/mcp-atlassian:latest"
+        "olegische/mcp-atlassian-multi-user:latest"
       ]
     }
   }
@@ -310,7 +310,7 @@ For Server/Data Center deployments, use direct variable passing:
         "-e", "JIRA_URL",
         "-e", "JIRA_PERSONAL_TOKEN",
         "-e", "JIRA_SSL_VERIFY",
-        "olegische/mcp-atlassian:latest"
+        "olegische/mcp-atlassian-multi-user:latest"
       ],
       "env": {
         "CONFLUENCE_URL": "https://confluence.your-company.com",
@@ -353,7 +353,7 @@ This example shows how to configure `mcp-atlassian` in your IDE (like Cursor or 
         "-e", "ATLASSIAN_OAUTH_REDIRECT_URI",
         "-e", "ATLASSIAN_OAUTH_SCOPE",
         "-e", "ATLASSIAN_OAUTH_CLOUD_ID",
-        "olegische/mcp-atlassian:latest",
+        "olegische/mcp-atlassian-multi-user:latest",
       ],
       "env": {
         "JIRA_URL": "https://your-company.atlassian.net",
@@ -400,7 +400,7 @@ Add the relevant proxy variables to the `args` (using `-e`) and `env` sections o
         "-e", "HTTP_PROXY",
         "-e", "HTTPS_PROXY",
         "-e", "NO_PROXY",
-        "olegische/mcp-atlassian:latest"
+        "olegische/mcp-atlassian-multi-user:latest"
       ],
       "env": {
         "... existing Confluence/Jira vars": "...",
@@ -433,7 +433,7 @@ Credentials in proxy URLs are masked in logs. If you set `NO_PROXY`, it will be 
         "-e", "CONFLUENCE_URL",
         "-e", "CONFLUENCE_USERNAME",
         "-e", "CONFLUENCE_API_TOKEN",
-        "olegische/mcp-atlassian:latest"
+        "olegische/mcp-atlassian-multi-user:latest"
       ],
       "env": {
         "CONFLUENCE_URL": "https://your-company.atlassian.net/wiki",
@@ -457,7 +457,7 @@ For Confluence Server/DC, use:
         "-i",
         "-e", "CONFLUENCE_URL",
         "-e", "CONFLUENCE_PERSONAL_TOKEN",
-        "olegische/mcp-atlassian:latest"
+        "olegische/mcp-atlassian-multi-user:latest"
       ],
       "env": {
         "CONFLUENCE_URL": "https://confluence.your-company.com",
@@ -482,7 +482,7 @@ For Confluence Server/DC, use:
         "-e", "JIRA_URL",
         "-e", "JIRA_USERNAME",
         "-e", "JIRA_API_TOKEN",
-        "olegische/mcp-atlassian:latest"
+        "olegische/mcp-atlassian-multi-user:latest"
       ],
       "env": {
         "JIRA_URL": "https://your-company.atlassian.net",
@@ -506,7 +506,7 @@ For Jira Server/DC, use:
         "-i",
         "-e", "JIRA_URL",
         "-e", "JIRA_PERSONAL_TOKEN",
-        "olegische/mcp-atlassian:latest"
+        "olegische/mcp-atlassian-multi-user:latest"
       ],
       "env": {
         "JIRA_URL": "https://jira.your-company.com",
@@ -550,13 +550,13 @@ Both transport types support single-user and multi-user authentication:
     # For SSE transport
     docker run --rm -p 9000:9000 \
       --env-file /path/to/your/.env \
-      olegische/mcp-atlassian:latest \
+      olegische/mcp-atlassian-multi-user:latest \
       --transport sse --port 9000 -vv
 
     # OR for streamable-http transport
     docker run --rm -p 9000:9000 \
       --env-file /path/to/your/.env \
-      olegische/mcp-atlassian:latest \
+      olegische/mcp-atlassian-multi-user:latest \
       --transport streamable-http --port 9000 -vv
     ```
 
@@ -594,14 +594,14 @@ Here's a complete example of setting up multi-user authentication with streamabl
    docker run --rm -i \
      -p 8080:8080 \
      -v "${HOME}/.mcp-atlassian:/home/app/.mcp-atlassian" \
-     olegische/mcp-atlassian:latest --oauth-setup -v
+     olegische/mcp-atlassian-multi-user:latest --oauth-setup -v
    ```
 
 2. Start the server with streamable-HTTP transport:
    ```bash
    docker run --rm -p 9000:9000 \
      --env-file /path/to/your/.env \
-     olegische/mcp-atlassian:latest \
+     olegische/mcp-atlassian-multi-user:latest \
      --transport streamable-http --port 9000 -vv
    ```
 
