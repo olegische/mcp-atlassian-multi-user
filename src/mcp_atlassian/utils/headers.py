@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 from fastmcp.server.dependencies import get_http_request
 from starlette.requests import Request
 
-from .env import is_custom_headers_enabled
+from .env import is_mcp_credentials_passthrough
 from .logging import mask_sensitive
 
 logger = logging.getLogger("mcp-atlassian.utils.headers")
@@ -20,7 +20,7 @@ def extract_custom_headers_from_request() -> Optional[Dict[str, Any]]:
         Dictionary containing extracted header values, or None if not in HTTP context
         or custom headers are disabled.
     """
-    if not is_custom_headers_enabled():
+    if not is_mcp_credentials_passthrough():
         return None
         
     try:

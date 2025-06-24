@@ -126,7 +126,7 @@ For cloud deployments where you don't want to embed credentials in the container
 ```bash
 # Run with custom headers enabled
 docker run --rm -p 8000:8000 \
-  -e ENABLE_CUSTOM_HEADERS=true \
+  -e MCP_CREDENTIALS_PASSTHROUGH=true \
   olegische/mcp-atlassian-multi-user:latest \
   --transport sse --port 8000 -vv
 ```
@@ -148,7 +148,7 @@ Use MCPO (MCP Proxy) to run the server with custom headers. This approach is par
 ```bash
 # Start the container with custom headers support
 docker run --rm -p 8000:8000 \
-  -e ENABLE_CUSTOM_HEADERS=true \
+  -e MCP_CREDENTIALS_PASSTHROUGH=true \
   olegische/mcp-atlassian-multi-user:latest \
   --transport sse --port 8000 -vv
 ```
@@ -535,7 +535,7 @@ Both transport types support single-user and multi-user authentication:
 
 **Custom Headers Support:**
 - You can pass configuration parameters via custom headers when using HTTP transport
-- Enable with `ENABLE_CUSTOM_HEADERS=true` environment variable
+- Enable with `MCP_CREDENTIALS_PASSTHROUGH=true` environment variable
 - Headers follow the pattern `X-JIRA-*` and `X-CONFLUENCE-*`, for example:
   - `X-JIRA-URL`: Override Jira URL
   - `X-JIRA-PERSONAL-TOKEN`: Pass Jira Personal Access Token

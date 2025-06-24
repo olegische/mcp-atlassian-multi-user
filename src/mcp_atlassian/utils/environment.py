@@ -3,7 +3,7 @@
 import logging
 import os
 
-from .env import is_custom_headers_enabled
+from .env import is_mcp_credentials_passthrough
 from .urls import is_atlassian_cloud_url
 
 logger = logging.getLogger("mcp-atlassian.utils.environment")
@@ -17,7 +17,7 @@ def get_available_services() -> dict[str, bool | None]:
     """
     # If custom headers are enabled, assume services are available
     # Configuration will be validated at request time from headers
-    if is_custom_headers_enabled():
+    if is_mcp_credentials_passthrough():
         logger.info("Custom headers enabled - services will be configured from HTTP headers")
         return {"confluence": True, "jira": True}
     confluence_url = os.getenv("CONFLUENCE_URL")

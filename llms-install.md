@@ -60,7 +60,7 @@ docker pull olegische/mcp-atlassian-multi-user:latest
 **Step 1**: Start Docker container with custom headers support
 ```bash
 docker run --rm -p 8000:8000 \
-  -e ENABLE_CUSTOM_HEADERS=true \
+  -e MCP_CREDENTIALS_PASSTHROUGH=true \
   olegische/mcp-atlassian-multi-user:latest \
   --transport sse --port 8000 -vv
 ```
@@ -112,7 +112,7 @@ MCPO (MCP-to-OpenAPI proxy) converts MCP servers into standard REST APIs, making
 **Step 1**: Start MCP server with custom headers
 ```bash
 docker run --rm -p 8000:8000 \
-  -e ENABLE_CUSTOM_HEADERS=true \
+  -e MCP_CREDENTIALS_PASSTHROUGH=true \
   olegische/mcp-atlassian-multi-user:latest \
   --transport sse --port 8000 -vv
 ```

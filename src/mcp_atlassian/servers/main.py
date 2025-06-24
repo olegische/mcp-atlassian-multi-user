@@ -20,7 +20,7 @@ from mcp_atlassian.confluence.config import ConfluenceConfig
 from mcp_atlassian.jira import JiraFetcher
 from mcp_atlassian.jira.config import JiraConfig
 from mcp_atlassian.utils.environment import get_available_services
-from mcp_atlassian.utils.env import is_custom_headers_enabled
+from mcp_atlassian.utils.env import is_mcp_credentials_passthrough
 from mcp_atlassian.utils.io import is_read_only_mode
 from mcp_atlassian.utils.logging import mask_sensitive
 from mcp_atlassian.utils.tools import get_enabled_tools, should_include_tool
@@ -42,13 +42,13 @@ async def main_lifespan(app: FastMCP[MainAppContext]) -> AsyncIterator[dict]:
     services = get_available_services()
     read_only = is_read_only_mode()
     enabled_tools = get_enabled_tools()
-    custom_headers_enabled = is_custom_headers_enabled()
+    mcp_credentials_passthrough = is_mcp_credentials_passthrough()
 
     loaded_jira_config: JiraConfig | None = None
     loaded_confluence_config: ConfluenceConfig | None = None
 
-    if custom_headers_enabled:
-        logger.info("Custom headers mode enabled - creating placeholder configurations")
+    if mcp_credentials_passthrough:
+        logger.info("MCP credentials passthrough enabled - creating placeholder configurations")
         # Create placeholder configurations for custom headers mode
         # These will be replaced with actual values from headers at request time
         if services.get("jira"):
@@ -59,7 +59,7 @@ async def main_lifespan(app: FastMCP[MainAppContext]) -> AsyncIterator[dict]:
                 api_token="placeholder",  # Will be overridden by headers
                 ssl_verify=True,
             )
-            logger.info("Jira placeholder configuration created for custom headers mode")
+            logger.info("Jira placeholder configuration created for MCP credentials")
         
         if services.get("confluence"):
             loaded_confluence_config = ConfluenceConfig(
@@ -69,7 +69,7 @@ async def main_lifespan(app: FastMCP[MainAppContext]) -> AsyncIterator[dict]:
                 api_token="placeholder",  # Will be overridden by headers
                 ssl_verify=True,
             )
-            logger.info("Confluence placeholder configuration created for custom headers mode")
+            logger.info("Confluence placeholder configuration created for MCP credentials")
     else:
         # Standard environment variable mode
         if services.get("jira"):

@@ -51,12 +51,12 @@ def is_env_ssl_verify(env_var_name: str, default: str = "true") -> bool:
     return os.getenv(env_var_name, default).lower() not in ("false", "0", "no")
 
 
-def is_custom_headers_enabled() -> bool:
-    """Check if custom headers for configuration are enabled.
+def is_mcp_credentials_passthrough() -> bool:
+    """Check if MCP credentials passthrough for configuration are enabled.
     
-    Checks if ENABLE_CUSTOM_HEADERS environment variable is set to a truthy value.
+    Checks if MCP_CREDENTIALS_PASSTHROUGH environment variable is set to a truthy value.
     
     Returns:
-        True if custom headers are enabled, False otherwise
+        True if MCP credentials passthrough are enabled, False otherwise
     """
-    return is_env_extended_truthy("ENABLE_CUSTOM_HEADERS", "false")
+    return is_env_extended_truthy("MCP_CREDENTIALS_PASSTHROUGH", "false")
