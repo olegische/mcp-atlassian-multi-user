@@ -9,9 +9,9 @@ This guide will help you install and configure the MCP Atlassian server for mana
 - Valid Atlassian credentials (API tokens or Personal Access Tokens)
 - Web browser for OAuth authentication (if using OAuth)
 
-## Installation Methods - Choose One
+## Installation Methods
 
-### Method 1: Docker with Environment Variables (Single User)
+### Method 1: Docker with Environment Variables (Single User) - **RECOMMENDED**
 
 **Best for**: Single user, production deployment, isolated environment
 
@@ -53,7 +53,7 @@ docker pull olegische/mcp-atlassian-multi-user:latest
 
 ---
 
-### Method 3: Docker with Custom Headers (Multi-User) ⭐ **RECOMMENDED**
+### Method 2: Docker with Custom Headers (Multi-User)
 
 **Best for**: Multi-user environments, enterprise deployments, dynamic credentials
 
@@ -103,7 +103,7 @@ docker run --rm -p 8000:8000 \
 
 ---
 
-### Method 4: MCPO Proxy for OpenWebUI Integration 🌐
+### Method 3: MCPO Proxy for OpenWebUI Integration
 
 **Best for**: OpenWebUI integration, REST API access, web-based AI interfaces
 
@@ -159,23 +159,9 @@ uvx mcpo --port 8600 --server-type "sse" \
     -- http://localhost:8000/sse
 ```
 
-**Step 4**: Access REST API and OpenAPI documentation
-- **REST API**: Available at `http://localhost:8600`
-- **Interactive docs**: Visit `http://localhost:8600/docs` for Swagger UI
-- **OpenWebUI**: Configure as external API endpoint in OpenWebUI settings
-
-**Benefits of MCPO approach:**
-- ✅ Converts MCP tools to standard REST APIs
-- ✅ Auto-generates OpenAPI documentation
-- ✅ Compatible with OpenWebUI and other web platforms
-- ✅ Secure HTTP endpoints with authentication
-- ✅ No need for custom MCP protocol handling
-
 ---
 
 ## Authentication Setup
-
-Before using any method, set up your Atlassian credentials:
 
 ### For Atlassian Cloud (API Token) - **Recommended**
 
@@ -191,6 +177,9 @@ Before using any method, set up your Atlassian credentials:
 
 ### For OAuth 2.0 (Cloud Only) - **Advanced**
 
+> [!NOTE]
+> OAuth 2.0 is more complex to set up but provides enhanced security features. For most users, API Token authentication is simpler and sufficient.
+
 1. Go to [Atlassian Developer Console](https://developer.atlassian.com/console/myapps/)
 2. Create an "OAuth 2.0 (3LO) integration" app
 3. Configure **Permissions** (scopes) for Jira/Confluence
@@ -202,14 +191,108 @@ Before using any method, set up your Atlassian credentials:
      -v "${HOME}/.mcp-atlassian:/home/app/.mcp-atlassian" \
      olegische/mcp-atlassian-multi-user:latest --oauth-setup -v
    ```
-6. Follow prompts and complete browser authorization
+6. Follow prompts for `Client ID`, `Secret`, `URI`, and `Scope`
+7. Complete browser authorization
 
-## Claude Desktop Configuration Files
+> [!IMPORTANT]
+> Include `offline_access` in scope for persistent auth (e.g., `read:jira-work write:jira-work offline_access`)
+
+## IDE Configuration
+
+### Claude Desktop Configuration Files
 
 **For Claude Desktop**, edit the configuration file:
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+**For Cursor**: Open Settings → MCP → + Add new global MCP server
+
+### Single Service Configurations
+
+**For Confluence Cloud only:**
+```json
+{
+  "mcpServers": {
+    "mcp-atlassian": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e", "CONFLUENCE_URL",
+        "-e", "CONFLUENCE_USERNAME",
+        "-e", "CONFLUENCE_API_TOKEN",
+        "olegische/mcp-atlassian-multi-user:latest"
+      ],
+      "env": {
+        "CONFLUENCE_URL": "https://your-company.atlassian.net/wiki",
+        "CONFLUENCE_USERNAME": "your.email@company.com",
+        "CONFLUENCE_API_TOKEN": "your_api_token"
+      }
+    }
+  }
+}
+```
+
+**For Jira Cloud only:**
+```json
+{
+  "mcpServers": {
+    "mcp-atlassian": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e", "JIRA_URL",
+        "-e", "JIRA_USERNAME",
+        "-e", "JIRA_API_TOKEN",
+        "olegische/mcp-atlassian-multi-user:latest"
+      ],
+      "env": {
+        "JIRA_URL": "https://your-company.atlassian.net",
+        "JIRA_USERNAME": "your.email@company.com",
+        "JIRA_API_TOKEN": "your_api_token"
+      }
+    }
+  }
+}
+```
+
+**For Server/Data Center deployments:**
+```json
+{
+  "mcpServers": {
+    "mcp-atlassian": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e", "CONFLUENCE_URL",
+        "-e", "CONFLUENCE_PERSONAL_TOKEN",
+        "-e", "CONFLUENCE_SSL_VERIFY",
+        "-e", "JIRA_URL",
+        "-e", "JIRA_PERSONAL_TOKEN",
+        "-e", "JIRA_SSL_VERIFY",
+        "olegische/mcp-atlassian-multi-user:latest"
+      ],
+      "env": {
+        "CONFLUENCE_URL": "https://confluence.your-company.com",
+        "CONFLUENCE_PERSONAL_TOKEN": "your_confluence_pat",
+        "CONFLUENCE_SSL_VERIFY": "false",
+        "JIRA_URL": "https://jira.your-company.com",
+        "JIRA_PERSONAL_TOKEN": "your_jira_pat",
+        "JIRA_SSL_VERIFY": "false"
+      }
+    }
+  }
+}
+```
+
+> [!NOTE]
+> Set `CONFLUENCE_SSL_VERIFY` and `JIRA_SSL_VERIFY` to "false" only if you have self-signed certificates.
 
 ## Configuration Options
 
@@ -219,14 +302,41 @@ Before using any method, set up your Atlassian credentials:
 - `JIRA_PROJECTS_FILTER`: Filter by project keys (e.g., "PROJ,DEV,SUPPORT")
 - `READ_ONLY_MODE`: Set to "true" to disable write operations
 - `MCP_VERBOSE`: Set to "true" for more detailed logging
-- `ENABLED_TOOLS`: Comma-separated list of tool names to enable
+- `MCP_LOGGING_STDOUT`: Set to "true" to log to stdout instead of stderr
+- `ENABLED_TOOLS`: Comma-separated list of tool names to enable (e.g., "confluence_search,jira_get_issue")
 - `CONFLUENCE_SSL_VERIFY`: Set to "false" for self-signed certificates
 - `JIRA_SSL_VERIFY`: Set to "false" for self-signed certificates
-- `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`: Proxy configuration
+- `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, `SOCKS_PROXY`: Proxy configuration
+
+### Proxy Configuration
+
+Add proxy variables to your configuration:
+
+```json
+{
+  "mcpServers": {
+    "mcp-atlassian": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e", "HTTP_PROXY",
+        "-e", "HTTPS_PROXY",
+        "-e", "NO_PROXY",
+        "olegische/mcp-atlassian-multi-user:latest"
+      ],
+      "env": {
+        "HTTP_PROXY": "http://proxy.internal:8080",
+        "HTTPS_PROXY": "http://proxy.internal:8080",
+        "NO_PROXY": "localhost,.your-company.com"
+      }
+    }
+  }
+}
+```
 
 ## Troubleshooting
-
-If you encounter issues during installation:
 
 ### Authentication Errors
 
@@ -246,13 +356,6 @@ If you encounter issues during installation:
 - Verify API token/PAT has appropriate scopes
 - Check project and space access permissions
 
-### Configuration Issues
-
-- Verify JSON syntax in configuration file
-- Check environment variable names and values
-- Ensure Docker is running and accessible
-- Validate file paths for OAuth volume mounts
-
 ### Debugging Commands
 
 ```bash
@@ -264,23 +367,46 @@ tail -n 20 -f ~/Library/Logs/Claude/mcp*.log
 
 # Check logs (Windows)
 type %APPDATA%\Claude\logs\mcp*.log | more
-
-# Test with MCP Inspector
-npx @modelcontextprotocol/inspector docker run --rm -i olegische/mcp-atlassian-multi-user:latest
 ```
+
+## Development and Testing
+
+For development and testing purposes only, you can use uvx:
+
+```bash
+# Install and run with uvx (development only)
+uvx mcp-atlassian --transport sse --port 8000 -vv
+
+# Test with MCP Inspector (development only)
+npx @modelcontextprotocol/inspector uvx mcp-atlassian ...
+```
+
+> [!WARNING]
+> uvx installation is intended for development and testing only. For production use, always use Docker deployment methods described above.
 
 ## Security Notes
 
-- Store API tokens and Personal Access Tokens securely
-- Never commit credentials to version control
+- Never share API tokens or Personal Access Tokens
+- Keep .env files secure and private
+- Store credentials securely and never commit to version control
 - Use environment files with proper permissions
 - Regularly review and rotate access tokens
 - Monitor access logs in Atlassian admin console
 - Use OAuth for enhanced security in production environments
+- See [SECURITY.md](https://github.com/olegische/mcp-atlassian-multi-user/blob/dev/SECURITY.md) for best practices
 
 ## Usage Examples
 
 After installation, you can perform various operations:
+
+### Example Usage
+
+Ask your AI assistant to:
+
+- **📝 Automatic Jira Updates** - "Update Jira from our meeting notes"
+- **🔍 AI-Powered Confluence Search** - "Find our OKR guide in Confluence and summarize it"
+- **🐛 Smart Jira Issue Filtering** - "Show me urgent bugs in PROJ project from last week"
+- **📄 Content Creation & Management** - "Create a tech design doc for XYZ feature"
 
 ### Jira Operations
 
