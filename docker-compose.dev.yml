@@ -4,7 +4,7 @@ services:
     container_name: ${PROJECT_NAME}
     platform: linux/amd64
     ports:
-      - "${PORT:-8660}:${PORT:-8000}"
+      - "${PORT:-8660}:${PORT:-8660}"
     env_file:
       - ./.env
     restart: unless-stopped

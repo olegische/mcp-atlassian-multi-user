@@ -1,0 +1,15 @@
+services:
+  mcp-atlassian-multi-user:
+    image: olegische/mcp-atlassian-multi-user:latest
+    container_name: mcp-atlassian-multi-user
+    platform: linux/amd64
+    ports:
+      - "8661:6661"
+    environment:
+      - TRANSPORT=sse
+      - PORT=8661
+      - HOST=0.0.0.0
+      - MCP_CREDENTIALS_PASSTHROUGH=true
+    restart: unless-stopped
+    volumes:
+      - ${HOME}/.mcp-atlassian-multi-user:/home/app/.mcp-atlassian-multi-user
