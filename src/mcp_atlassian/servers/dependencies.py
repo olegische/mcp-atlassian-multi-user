@@ -245,9 +245,18 @@ async def get_jira_fetcher(ctx: Context) -> JiraFetcher:
             f"Global config auth_type: {app_lifespan_ctx_global.full_jira_config.auth_type}"
         )
         return JiraFetcher(config=app_lifespan_ctx_global.full_jira_config)
+
+    # If we reach here, no config was found. Check if we are in passthrough mode and provide a better error.
+    from mcp_atlassian.utils.env import is_mcp_credentials_passthrough
+    if is_mcp_credentials_passthrough():
+        logger.error("Jira configuration error: Header passthrough is enabled, but no valid X-JIRA-* headers were found in the request.")
+        raise ValueError(
+            "Configuration Error: Header passthrough mode is active, but the required X-JIRA-* headers are missing or invalid in the request."
+        )
+    
     logger.error("Jira configuration could not be resolved.")
     raise ValueError(
-        "Jira client (fetcher) not available. Ensure server is configured correctly."
+        "Jira client (fetcher) not available. Ensure server is configured correctly via environment variables."
     )
 
 
@@ -385,7 +394,16 @@ async def get_confluence_fetcher(ctx: Context) -> ConfluenceFetcher:
             f"Global config auth_type: {app_lifespan_ctx_global.full_confluence_config.auth_type}"
         )
         return ConfluenceFetcher(config=app_lifespan_ctx_global.full_confluence_config)
+
+    # If we reach here, no config was found. Check if we are in passthrough mode and provide a better error.
+    from mcp_atlassian.utils.env import is_mcp_credentials_passthrough
+    if is_mcp_credentials_passthrough():
+        logger.error("Confluence configuration error: Header passthrough is enabled, but no valid X-CONFLUENCE-* headers were found in the request.")
+        raise ValueError(
+            "Configuration Error: Header passthrough mode is active, but the required X-CONFLUENCE-* headers are missing or invalid in the request."
+        )
+
     logger.error("Confluence configuration could not be resolved.")
     raise ValueError(
-        "Confluence client (fetcher) not available. Ensure server is configured correctly."
+        "Confluence client (fetcher) not available. Ensure server is configured correctly via environment variables."
     )

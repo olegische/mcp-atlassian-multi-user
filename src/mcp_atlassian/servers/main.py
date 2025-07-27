@@ -13,7 +13,7 @@ from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 
 from mcp_atlassian.confluence import ConfluenceFetcher
 from mcp_atlassian.confluence.config import ConfluenceConfig
@@ -248,10 +248,15 @@ class UserTokenMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
-    ) -> JSONResponse:
+    ) -> Response:
         logger.debug(
             f"UserTokenMiddleware.dispatch: ENTERED for request path='{request.url.path}', method='{request.method}'"
         )
+        
+        # Log all incoming header keys for debugging
+        header_keys = ", ".join(request.headers.keys())
+        logger.info(f"Incoming headers for '{request.url.path}': {header_keys}")
+        
         mcp_server_instance = self.mcp_server_ref
         if mcp_server_instance is None:
             logger.debug(
