@@ -176,9 +176,13 @@ class ConfluenceConfig:
                 error_msg = "Server/Data Center authentication requires X-CONFLUENCE-PERSONAL-TOKEN or X-CONFLUENCE-USERNAME and X-CONFLUENCE-API-TOKEN headers"
                 raise ValueError(error_msg)
 
-        # SSL verification
-        ssl_verify_str = getattr(request_state, 'confluence_ssl_verify', 'true')
-        ssl_verify = ssl_verify_str.lower() not in ("false", "0", "no")
+        # SSL verification - prioritize header, fallback to environment
+        ssl_verify_header = getattr(request_state, "confluence_ssl_verify", None)
+        if ssl_verify_header is not None:
+            ssl_verify = ssl_verify_header.lower() not in ("false", "0", "no")
+        else:
+            # Fallback to environment variable if header is not present
+            ssl_verify = is_env_ssl_verify("CONFLUENCE_SSL_VERIFY")
 
         # Get optional settings
         spaces_filter = getattr(request_state, 'confluence_spaces_filter', None)

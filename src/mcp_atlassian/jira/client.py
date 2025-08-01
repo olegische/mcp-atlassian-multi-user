@@ -69,7 +69,6 @@ class JiraClient:
                 url=api_url,
                 session=session,
                 cloud=True,  # OAuth is only for Cloud
-                verify_ssl=self.config.ssl_verify,
             )
         elif self.config.auth_type == "pat":
             logger.debug(
@@ -81,7 +80,6 @@ class JiraClient:
                 url=self.config.url,
                 token=self.config.personal_token,
                 cloud=self.config.is_cloud,
-                verify_ssl=self.config.ssl_verify,
             )
         else:  # basic auth
             logger.debug(
@@ -95,17 +93,33 @@ class JiraClient:
                 username=self.config.username,
                 password=self.config.api_token,
                 cloud=self.config.is_cloud,
-                verify_ssl=self.config.ssl_verify,
             )
             logger.debug(
                 f"Jira client initialized. Session headers (Authorization masked): "
                 f"{get_masked_session_headers(dict(self.jira._session.headers))}"
             )
 
+        # Determine the effective URL for SSL verification
+        effective_url = self.config.url
+        if self.config.auth_type == "oauth":
+            # For OAuth, the URL is different
+            if self.config.oauth_config and self.config.oauth_config.cloud_id:
+                effective_url = (
+                    f"https://api.atlassian.com/ex/jira/{self.config.oauth_config.cloud_id}"
+                )
+
+        # Log the final SSL verification setting being used
+        log_config_param(
+            logger,
+            "Jira",
+            "SSL_VERIFY",
+            self.config.ssl_verify,
+        )
+
         # Configure SSL verification using the shared utility
         configure_ssl_verification(
             service_name="Jira",
-            url=self.config.url,
+            url=effective_url,
             session=self.jira._session,
             ssl_verify=self.config.ssl_verify,
         )
