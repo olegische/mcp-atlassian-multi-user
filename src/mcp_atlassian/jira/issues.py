@@ -717,7 +717,12 @@ class IssuesMixin(
         # Iterate over a copy to allow modification of the original kwargs if needed elsewhere
         for key, value in kwargs.copy().items():
             # Skip keys used internally for epic/parent handling or explicitly handled args like assignee/components
-            if key.startswith("__epic_") or key in ("parent", "assignee", "components"):
+            if key.startswith("__epic_") or key in (
+                "parent",
+                "assignee",
+                "components",
+                "project",
+            ):
                 continue
 
             normalized_key = key.lower()
