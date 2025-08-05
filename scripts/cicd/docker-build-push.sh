@@ -26,7 +26,7 @@ docker compose -f docker-compose.build.yml build
 if [ $? -eq 0 ]; then
     echo "Build successful. Stopping and restarting development containers..."
     docker compose -f docker-compose.dev.yml down
-    docker compose -f docker-compose.dev.yml up -d
+    # docker compose -f docker-compose.dev.yml up -d
 
     echo "Pushing Docker images to registry..."
     echo "$docker_token" | docker login --username "$docker_username" --password-stdin
