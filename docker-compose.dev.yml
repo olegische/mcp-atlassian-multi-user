@@ -1,6 +1,6 @@
 services:
   mcp-atlassian-multi-user:
-    image: ${REGISTRY_ID}/${PROJECT_NAME}:latest
+    image: ghcr.io/${REGISTRY_ID}/${PROJECT_NAME}:latest
     container_name: ${PROJECT_NAME}
     platform: linux/amd64
     ports:
@@ -8,5 +8,3 @@ services:
     env_file:
       - ./.env
     restart: unless-stopped
-    volumes:
-      - ${HOME}/.${PROJECT_NAME}:/home/app/.${PROJECT_NAME}
