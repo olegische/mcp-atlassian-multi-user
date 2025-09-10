@@ -665,7 +665,13 @@ class IssuesMixin(
         if "parent" in kwargs:
             parent_key = kwargs.get("parent")
             if parent_key:
-                fields["parent"] = {"key": parent_key}
+                # Handle cases where parent_key might be a dict {'key': '...'}
+                if isinstance(parent_key, dict) and "key" in parent_key:
+                    fields["parent"] = {"key": parent_key["key"]}
+                elif isinstance(parent_key, str):
+                    fields["parent"] = {"key": parent_key}
+                else:
+                    logger.warning(f"Invalid format for parent key: {parent_key}")
             # Remove parent from kwargs to avoid double processing
             kwargs.pop("parent", None)
         elif "issuetype" in fields and fields["issuetype"]["name"].lower() in (

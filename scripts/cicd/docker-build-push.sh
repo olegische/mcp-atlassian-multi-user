@@ -30,7 +30,10 @@ build_and_push() {
   local build_compose="$2"
   local dev_compose="$3"
   local env_file="$4"
-  local stop_and_up_dev="${5:-true}"
+  local docker_username="$5"
+  local dockerhub_token="$6"
+  local ghcr_token="$7"
+  local stop_and_up_dev="${8:-true}"
 
   echo ">>> [$project_name] Loading env from $env_file"
   load_env "$env_file"
@@ -46,11 +49,17 @@ build_and_push() {
     docker compose -f "$dev_compose" up -d
   fi
 
-  echo ">>> [$project_name] Logging in to GHCR..."
-  echo "$docker_token" | docker login ghcr.io --username "$docker_username" --password-stdin
+  echo ">>> [$project_name] Logging in to Docker Hub..."
+  echo "$dockerhub_token" | docker login --username "$docker_username" --password-stdin
 
-  echo ">>> [$project_name] Pushing image..."
+  echo ">>> [$project_name] Logging in to GHCR..."
+  echo "$ghcr_token" | docker login ghcr.io --username "$docker_username" --password-stdin
+
+  echo ">>> [$project_name] Pushing image to all registries..."
   docker compose -f "$build_compose" push
+
+  echo ">>> [$project_name] Logging out from Docker Hub..."
+  docker logout
 
   echo ">>> [$project_name] Logging out from GHCR..."
   docker logout ghcr.io
@@ -59,15 +68,23 @@ build_and_push() {
 }
 
 main() {
-  docker_token=$(read_first_line_of_file "secrets/.docker-oauth-token")
+  local docker_username
   docker_username=$(read_first_line_of_file "secrets/.docker-login-username")
+  
+  local dockerhub_token
+  dockerhub_token=$(read_first_line_of_file "secrets/.docker-oauth-token")
 
-  build_and_push "Root" \
+  local ghcr_token
+  ghcr_token=$(read_first_line_of_file "secrets/.docker-oauth-token-ghcr")
+
+  build_and_push "mcp-atlassian-multi-user" \
     "docker-compose.build.yml" \
     "docker-compose.dev.yml" \
     ".env" \
+    "$docker_username" \
+    "$dockerhub_token" \
+    "$ghcr_token" \
     "false"
-
 }
 
 main
